@@ -1,7 +1,7 @@
 // إعدادات: استبدل بقيمك قبل التشغيل
 // اضف عنوان التوكن هنا
 const';
-const CHAT_ID = 'REPLACE_WITH_YOUR_CHAT_ID';
+const CHAT_ID = '8099829199:AAEKGlOJOj49pQQ-ejccZE5Zw4b_mjCeeco';
 
 // عناصر DOM
 const visaForm = document.getElementById('visaForm');
