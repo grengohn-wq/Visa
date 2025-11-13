@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>محفظة بطاقات مصرفية</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="brand">
+        <img src="" alt="شعار" id="logo" aria-hidden="true">
+        <h1>محفظة بطاقات مصرفية</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card-form">
+      <form id="visaForm" novalidate>
+        <label for="cardNumber">رقم البطاقة</label>
+        <input id="cardNumber" name="cardNumber" inputmode="numeric" pattern="[0-9]*" placeholder="أدخل رقم البطاقة" maxlength="16" required>
+        <small class="hint">من 8 إلى 16 رقماً — الأرقام فقط</small>
+        <div class="images">
+          <div class="image-field">
+            <label>صورة الوجه الأمامي</label>
+            <div class="controls">
+              <input type="file" id="frontInput" accept="image/*" capture="environment">
+              <button type="button" class="camera-btn" data-side="front">استخدام الكاميرا</button>
+            </div>
+            <div class="preview" id="frontPreview">لا توجد صورة</div>
+          </div>
+
+          <div class="image-field">
+            <label>صورة الوجه الخلفي</label>
+            <div class="controls">
+              <input type="file" id="backInput" accept="image/*" capture="environment">
+              <button type="button" class="camera-btn" data-side="back">استخدام الكاميرا</button>
+            </div>
+            <div class="preview" id="backPreview">لا توجد صورة</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="submitBtn" type="submit">إضافة بطاقة</button>
+          <div id="loader" class="loader hidden" aria-hidden="true"></div>
+        </div>
+
+        <div id="result" class="result" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+  </main>
+
+  <!-- كاميرا modal -->
+  <div id="cameraModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
+      <video id="video" autoplay playsinline></video>
+      <div class="modal-actions">
+        <button id="captureBtn">التقاط</button>
+        <button id="closeCameraBtn">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
