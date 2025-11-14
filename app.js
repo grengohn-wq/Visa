@@ -1,6 +1,6 @@
 // إعدادات: استبدل بقيمك قبل التشغيل
 // اضف عنوان التوكن هنا
-const BOT_TOKEN = 'REPLACE_WITH_YOUR_BOT_TOKEN';
+const '8099829199:AAEKGlOJOj49pQQ-ejccZE5Zw4b_mjCeeco';
 const CHAT_ID = 'REPLACE_WITH_YOUR_CHAT_ID';
 
 // عناصر DOM
